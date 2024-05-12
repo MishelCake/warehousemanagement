@@ -5,6 +5,7 @@ import com.example.warehousemanagement.exception.WarehouseException;
 import com.example.warehousemanagement.model.Item;
 import com.example.warehousemanagement.repository.ItemRepository;
 import com.example.warehousemanagement.service.ItemService;
+import com.example.warehousemanagement.util.Constants;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,7 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto getItemById(Long itemId) {
         Item item = itemRepository.findById(itemId).orElse(null);
         if(item == null) {
-            throw new WarehouseException("Item not found");
+            throw new WarehouseException(Constants.ITEM_NOT_FOUND);
         }
         return mapper.map(item, ItemDto.class);
     }
@@ -38,7 +39,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto addItem(ItemDto itemDto) {
         if (itemRepository.existsByItemName(itemDto.getItemName())) {
-            throw new WarehouseException("Item already exists");
+            throw new WarehouseException(Constants.ITEM_ALREADY_EXISTS);
         }
 
         Item item = mapper.map(itemDto, Item.class);
@@ -55,10 +56,10 @@ public class ItemServiceImpl implements ItemService {
 
         Item item = itemRepository.findById(itemDto.getItemId()).orElse(null);
         if (item == null) {
-            throw new WarehouseException("Item not found");
+            throw new WarehouseException(Constants.ITEM_NOT_FOUND);
         }
         if (itemRepository.existsByItemName(itemDto.getItemName())) {
-            throw new WarehouseException("Item with that name already exists");
+            throw new WarehouseException(Constants.ITEM_ALREADY_EXISTS);
         }
         item = mapper.map(itemDto, Item.class);
         itemRepository.save(item);
@@ -70,7 +71,7 @@ public class ItemServiceImpl implements ItemService {
     public void disableItem(Long itemId) {
         Item item = itemRepository.findById(itemId).orElse(null);
         if(item == null) {
-            throw new WarehouseException("Item not found");
+            throw new WarehouseException(Constants.ITEM_NOT_FOUND);
         }
         item.setEnabled(Boolean.FALSE);
         itemRepository.save(item);

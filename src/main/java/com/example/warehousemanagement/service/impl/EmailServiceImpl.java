@@ -33,7 +33,4 @@ public class EmailServiceImpl implements EmailService {
         String subject = "Order Declined.";
         this.sendEmail(email, subject, body);
     }
-
-
-
 }

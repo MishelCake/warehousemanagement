@@ -5,6 +5,7 @@ import com.example.warehousemanagement.exception.WarehouseException;
 import com.example.warehousemanagement.model.Truck;
 import com.example.warehousemanagement.repository.TruckRepository;
 import com.example.warehousemanagement.service.TruckService;
+import com.example.warehousemanagement.util.Constants;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,7 @@ public class TruckServiceImpl implements TruckService {
     public TruckDto getTruckById(Long truckId) {
         Truck truck = truckRepository.findById(truckId).orElse(null);
         if(truck == null) {
-            throw new WarehouseException("Truck not found");
+            throw new WarehouseException(Constants.TRUCK_NOT_FOUND);
         }
         return mapper.map(truck, TruckDto.class);
     }
@@ -38,10 +39,10 @@ public class TruckServiceImpl implements TruckService {
     @Override
     public TruckDto addTruck(TruckDto truckDto) {
         if (truckRepository.existsByChassisNumber(truckDto.getChassisNumber())) {
-            throw new WarehouseException("Chassis number already exists");
+            throw new WarehouseException(Constants.CHASSIS_NUMBER_EXISTS);
         }
         if (truckRepository.existsByLicensePlate(truckDto.getLicensePlate())) {
-            throw new WarehouseException("License plate already exists");
+            throw new WarehouseException(Constants.LICENSE_PLATE_EXISTS);
         }
         Truck truck = mapper.map(truckDto, Truck.class);
         truck.setEnabled(Boolean.TRUE);
@@ -55,10 +56,10 @@ public class TruckServiceImpl implements TruckService {
     public TruckDto updateLicensePlate(String chassisNumber, String newLicensePlate) {
         Truck truck = truckRepository.findTruckByChassisNumber(chassisNumber).orElse(null);
         if(truck == null) {
-            throw new WarehouseException("Truck with the provided chassis number does not exist");
+            throw new WarehouseException(Constants.TRUCK_NOT_FOUND);
         }
         if (truckRepository.existsByLicensePlate(newLicensePlate)) {
-            throw new WarehouseException("License plate already exists");
+            throw new WarehouseException(Constants.LICENSE_PLATE_EXISTS);
         }
         truck.setLicensePlate(newLicensePlate);
         truckRepository.save(truck);
@@ -71,7 +72,7 @@ public class TruckServiceImpl implements TruckService {
         Truck truck = truckRepository.findTruckByChassisNumber(chassisNumber).orElse(null);
 
         if(truck == null) {
-            throw new WarehouseException("Truck with the provided chassis number does not exist");
+            throw new WarehouseException(Constants.TRUCK_NOT_FOUND);
         }
         truck.setEnabled(Boolean.FALSE);
         truckRepository.save(truck);

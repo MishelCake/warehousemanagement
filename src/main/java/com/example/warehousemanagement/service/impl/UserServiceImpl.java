@@ -16,6 +16,7 @@ import com.example.warehousemanagement.security.SecurityUserDetailsService;
 import com.example.warehousemanagement.security.UserDetailsImpl;
 import com.example.warehousemanagement.security.exception.UnauthorizedException;
 import com.example.warehousemanagement.service.UserService;
+import com.example.warehousemanagement.util.Constants;
 import com.example.warehousemanagement.util.LoggedInUserInfo;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -79,7 +80,7 @@ public class UserServiceImpl implements UserService {
             user.setCreatedDate(LocalDateTime.now());
             user.setEnabled(Boolean.TRUE);
             Role role = roleRepository.findByRole(userDto.getRole())
-                    .orElseThrow(() -> new ValidationException("Role not found"));
+                    .orElseThrow(() -> new ValidationException(Constants.ROLE_NOT_FOUND));
             user.setRole(role);
             user = userRepository.save(user);
 
@@ -101,10 +102,10 @@ public class UserServiceImpl implements UserService {
     public UserProfileDto updateUser(UpdateUserDto userDto) {
         User user = userRepository.findById(userDto.getUserId()).orElse(null);
         if (user == null) {
-            throw new WarehouseException("User not found");
+            throw new WarehouseException(Constants.USER_NOT_FOUND);
         }
         if (user.getRole().getRole().equals(UserRoles.SYSTEM_ADMIN) && !loggedInUserInfo.getLoggedInUserEmail().equals(user.getEmail())) {
-            throw new WarehouseException("Unauthorized to update this user");
+            throw new WarehouseException(Constants.NOT_AUTHORIZED);
         }
 
         user.setName(userDto.getName());
@@ -122,10 +123,10 @@ public class UserServiceImpl implements UserService {
     public void disableUser(Long userId) {
         User user = userRepository.findById(userId).orElse(null);
         if(user == null) {
-            throw new WarehouseException("User not found");
+            throw new WarehouseException(Constants.USER_NOT_FOUND);
         }
         if (user.getRole().getRole().equals(UserRoles.SYSTEM_ADMIN)) {
-            throw new WarehouseException("No access to disable this account");
+            throw new WarehouseException(Constants.NOT_AUTHORIZED);
         }
         user.setEnabled(false);
         userRepository.save(user);

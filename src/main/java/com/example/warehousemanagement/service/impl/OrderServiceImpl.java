@@ -18,6 +18,7 @@ import com.example.warehousemanagement.repository.OrderRepository;
 import com.example.warehousemanagement.repository.UserRepository;
 import com.example.warehousemanagement.service.EmailService;
 import com.example.warehousemanagement.service.OrderService;
+import com.example.warehousemanagement.util.Constants;
 import com.example.warehousemanagement.util.LoggedInUserInfo;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +50,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDto createOrder(OrderDto orderDto) {
         User user = userRepository.findById(orderDto.getUserId()).orElse(null);
         if (user == null) {
-            throw new WarehouseException("User not found");
+            throw new WarehouseException(Constants.USER_NOT_FOUND);
         }
         String orderNumber = "ORD-" + UUID.randomUUID();
 
@@ -58,7 +59,7 @@ public class OrderServiceImpl implements OrderService {
         order.setUser(user);
         order.setSubmittedDate(LocalDateTime.now());
         if (orderDto.getDeadline().isBefore(LocalDateTime.now()) || orderDto.getDeadline().isEqual(LocalDateTime.now())) {
-            throw new WarehouseException("Deadline can not be before today");
+            throw new WarehouseException(Constants.WRONG_DEADLINE);
         }
         order.setDeadlineDate(orderDto.getDeadline());
         order.setOrderStatus(OrderStatus.CREATED);
@@ -69,11 +70,11 @@ public class OrderServiceImpl implements OrderService {
         for (OrderItemDto orderItemDto : orderDto.getOrderItemDto()) {
             Item item = itemRepository.findById(orderItemDto.getItemId()).orElse(null);
             if (item == null) {
-                throw new WarehouseException("Item with ID ".concat(orderItemDto.getItemId().toString()).concat(" not found"));
+                throw new WarehouseException(Constants.ITEM_WITH_ID.concat(orderItemDto.getItemId().toString()).concat(Constants.NOT_FOUND));
             }
 
             if (item.getQuantity() < orderItemDto.getQuantity()) {
-                throw new WarehouseException("Insufficient quantity available for item: ".concat(item.getItemName()));
+                throw new WarehouseException(Constants.INSUFFICIENT_QUANTITY_AVAILABLE.concat(item.getItemName()));
             }
 
             OrderItem orderItem = new OrderItem();
@@ -98,13 +99,13 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDto addItemsToOrder(UpdateOrderDto updateOrderDto) {
         Order order = orderRepository.findById(updateOrderDto.getOrderId()).orElse(null);
         if (order == null) {
-            throw new WarehouseException("Order not found");
+            throw new WarehouseException(Constants.ORDER_NOT_FOUND);
         }
 
         checkAccess(order.getUser().getEmail());
 
         if (!order.getOrderStatus().equals(OrderStatus.CREATED) && !order.getOrderStatus().equals(OrderStatus.DECLINED)) {
-            throw new WarehouseException("Order cannot be updated because its status is not CREATED or DECLINED");
+            throw new WarehouseException(Constants.ORDER_CANNOT_BE_UPDATED);
         }
 
         List<OrderItemDto> newItems = updateOrderDto.getNewItems();
@@ -112,17 +113,17 @@ public class OrderServiceImpl implements OrderService {
 
         for(OrderItemDto newItem : newItems) {
             Item item = itemRepository.findById(newItem.getItemId())
-                    .orElseThrow(() -> new WarehouseException("Item not found with ID: " + newItem.getItemId()));
+                    .orElseThrow(() -> new WarehouseException(Constants.ITEM_WITH_ID + newItem.getItemId() + Constants.NOT_FOUND));
 
             //check if this item already exists in OrderItem table
             if(orderItemRepository.existsByOrder_OrderIdAndItem_ItemId(order.getOrderId(), item.getItemId())) {
-                throw new WarehouseException("Item with id " + item.getItemId() + " already exists. " +
+                throw new WarehouseException(Constants.ITEM_WITH_ID + item.getItemId() + " already exists. " +
                         "Please update the quantity!");
             }
 
             //check of item quantity is sufficient
             if(item.getQuantity() < newItem.getQuantity()) {
-                throw new WarehouseException("Insufficient quantity available for item: " + item.getItemName());
+                throw new WarehouseException(Constants.INSUFFICIENT_QUANTITY_AVAILABLE + item.getItemName());
             }
             OrderItem orderItem = new OrderItem();
             orderItem.setItem(item);
@@ -148,19 +149,19 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDto removeItemsFromOrder(Long orderId, List<Long> itemsToRemoveIds) {
         Order order = orderRepository.findById(orderId).orElse(null);
         if (order == null) {
-            throw new WarehouseException("Order not found");
+            throw new WarehouseException(Constants.ORDER_NOT_FOUND);
         }
 
         checkAccess(order.getUser().getEmail());
 
         if (!order.getOrderStatus().equals(OrderStatus.CREATED) && !order.getOrderStatus().equals(OrderStatus.DECLINED)) {
-            throw new WarehouseException("Order cannot be updated because its status is not CREATED or DECLINED");
+            throw new WarehouseException(Constants.ORDER_CANNOT_BE_UPDATED);
         }
 
         List<OrderItem> orderItemsToRemove = new ArrayList<>();
         for(Long itemId : itemsToRemoveIds) {
             OrderItem orderItem = orderItemRepository.findOrderItemByOrder_OrderIdAndItem_ItemId(order.getOrderId(), itemId)
-                    .orElseThrow(() -> new WarehouseException("Item " + itemId + " is not in this order "));
+                    .orElseThrow(() -> new WarehouseException(Constants.ITEM_WITH_ID + itemId + " is not in this order "));
 
             //remove item from order
             order.getOrderItems().remove(orderItem);
@@ -181,18 +182,18 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDto modifyQuantityOfOrderItems(Long orderId, List<OrderItemDto> modifiedItems) {
         Order order = orderRepository.findById(orderId).orElse(null);
         if (order == null) {
-            throw new WarehouseException("Order not found");
+            throw new WarehouseException(Constants.ORDER_NOT_FOUND);
         }
 
         checkAccess(order.getUser().getEmail());
 
         if (!order.getOrderStatus().equals(OrderStatus.CREATED) && !order.getOrderStatus().equals(OrderStatus.DECLINED)) {
-            throw new WarehouseException("Order cannot be updated because its status is not CREATED or DECLINED");
+            throw new WarehouseException(Constants.ORDER_CANNOT_BE_UPDATED);
         }
 
         for(OrderItemDto orderItemDto : modifiedItems) {
             OrderItem orderItemToModify = orderItemRepository.findOrderItemByOrder_OrderIdAndItem_ItemId(order.getOrderId(), orderItemDto.getItemId())
-                    .orElseThrow(() -> new WarehouseException("Item " + orderItemDto.getItemId() + " is not in this order "));
+                    .orElseThrow(() -> new WarehouseException(Constants.ITEM_WITH_ID + orderItemDto.getItemId() + " is not in this order "));
 
             Item item = orderItemToModify.getItem();
 
@@ -205,7 +206,7 @@ public class OrderServiceImpl implements OrderService {
                     item.setQuantity(item.getQuantity() - difference);
                     orderItemToModify.setOrderQuantity(newQuantity);
                 } else {
-                    throw new WarehouseException("Insufficient quantity available in inventory.");
+                    throw new WarehouseException(Constants.INSUFFICIENT_QUANTITY_IN_INVENTORY);
                 }
             } else if (difference < 0) {
                 item.setQuantity(item.getQuantity() - difference);
@@ -222,16 +223,16 @@ public class OrderServiceImpl implements OrderService {
     public void cancelOrder(Long orderId) {
         Order order = orderRepository.findById(orderId).orElse(null);
         if (order == null) {
-            throw new WarehouseException("Order not found");
+            throw new WarehouseException(Constants.ORDER_NOT_FOUND);
         }
 
         if (!loggedInUserInfo.getLoggedInUserEmail().equals(order.getUser().getEmail())) {
-            throw new WarehouseException("You are not authorized to cancel this order");
+            throw new WarehouseException(Constants.NOT_AUTHORIZED_TO_CANCEL_ORDER);
         }
 
         if (order.getOrderStatus().equals(OrderStatus.CANCELED) || order.getOrderStatus().equals(OrderStatus.FULFILLED)
                 || order.getOrderStatus().equals(OrderStatus.UNDER_DELIVERY)) {
-            throw new WarehouseException("This order is " + order.getOrderStatus());
+            throw new WarehouseException(Constants.THIS_ORDER_IS + order.getOrderStatus());
         }
 
         order.setOrderStatus(OrderStatus.CANCELED);
@@ -242,11 +243,11 @@ public class OrderServiceImpl implements OrderService {
     public void submitOrder(Long orderId) {
         Order order = orderRepository.findById(orderId).orElse(null);
         if (order == null) {
-            throw new WarehouseException("Order not found");
+            throw new WarehouseException(Constants.ORDER_NOT_FOUND);
         }
 
         if (!loggedInUserInfo.getLoggedInUserEmail().equals(order.getUser().getEmail())) {
-            throw new WarehouseException("You are not authorized to cancel this order");
+            throw new WarehouseException(Constants.NOT_AUTHORIZED_TO_CANCEL_ORDER);
         }
 
         if (order.getOrderStatus().equals(OrderStatus.CREATED) || order.getOrderStatus().equals(OrderStatus.DECLINED)) {
@@ -287,7 +288,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDto getOrderById(Long orderId) {
         Order order = orderRepository.findById(orderId).orElse(null);
         if(order == null) {
-            throw new WarehouseException("Order not found");
+            throw new WarehouseException(Constants.ORDER_NOT_FOUND);
         }
         return orderMapper.toDto(order);
     }
@@ -296,13 +297,13 @@ public class OrderServiceImpl implements OrderService {
     public void approveOrder(Long orderId) {
         Order order = orderRepository.findById(orderId).orElse(null);
         if(order == null) {
-            throw new WarehouseException("Order not found");
+            throw new WarehouseException(Constants.ORDER_NOT_FOUND);
         }
         if (order.getOrderStatus().equals(OrderStatus.AWAITING_APPROVAL)) {
             order.setOrderStatus(OrderStatus.APPROVED);
             orderRepository.save(order);
         } else {
-            throw new WarehouseException("This order is " + order.getOrderStatus().name());
+            throw new WarehouseException(Constants.THIS_ORDER_IS + order.getOrderStatus().name());
         }
     }
 
@@ -310,7 +311,7 @@ public class OrderServiceImpl implements OrderService {
     public void declineOrder(Long orderId, String reason) {
         Order order = orderRepository.findById(orderId).orElse(null);
         if(order == null) {
-            throw new WarehouseException("Order not found");
+            throw new WarehouseException(Constants.ORDER_NOT_FOUND);
         }
         if (order.getOrderStatus().equals(OrderStatus.AWAITING_APPROVAL)) {
             order.setOrderStatus(OrderStatus.DECLINED);
@@ -319,7 +320,7 @@ public class OrderServiceImpl implements OrderService {
 
             orderRepository.save(order);
         } else {
-            throw new WarehouseException("This order is " + order.getOrderStatus().name());
+            throw new WarehouseException(Constants.THIS_ORDER_IS + order.getOrderStatus().name());
         }
     }
 
