@@ -23,4 +23,10 @@ public class WarehouseException extends RuntimeException{
         super(message);
         this.messages = messages;
     }
+
+    public static WarehouseException notFoundById(String className, Object id) {
+        String message = String.format("%s with Id %s not found", className, id.toString());
+
+        return new WarehouseException(message);
+    }
 }

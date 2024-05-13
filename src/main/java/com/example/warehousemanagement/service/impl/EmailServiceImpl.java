@@ -2,6 +2,7 @@ package com.example.warehousemanagement.service.impl;
 
 import com.example.warehousemanagement.exception.WarehouseException;
 import com.example.warehousemanagement.service.EmailService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
@@ -31,6 +32,13 @@ public class EmailServiceImpl implements EmailService {
         String body = "Hello " + name + "!\n\n" + "Your order with order number " + orderNumber + " was canceled.\n\n"
                 + reason + "\n\n" + "Thank you.";
         String subject = "Order Declined.";
+        this.sendEmail(email, subject, body);
+    }
+
+    @Override
+    public void sendEmailToResetPassword(String email, String token, HttpServletRequest httpRequest) {
+        String body ="Click here to reset your password " + "http://localhost:8080" + httpRequest.getContextPath() + "/password/reset?token=" + token;
+        String subject = "Reset password.";
         this.sendEmail(email, subject, body);
     }
 }

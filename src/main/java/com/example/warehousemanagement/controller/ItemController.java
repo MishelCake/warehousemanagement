@@ -12,35 +12,37 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/item")
 public class ItemController {
     private final ItemService itemService;
 
-    @GetMapping("/items")
+    @GetMapping("/all")
     public ResponseEntity<ServiceResponse> getAllActiveItems() {
         return ResponseHandler.generateResponse("OK", HttpStatus.OK, itemService.getAllActiveItems());
     }
 
-    @GetMapping("/item")
+    @GetMapping("/id")
     public ResponseEntity<ServiceResponse> getItemById(@Valid @RequestParam Long itemId) {
         return ResponseHandler.generateResponse("OK", HttpStatus.OK, itemService.getItemById(itemId));
     }
 
-    @PostMapping("/item/add")
+    @PostMapping("/add")
     public ResponseEntity<ServiceResponse> addNewItem(@Valid @RequestBody ItemDto itemDto) {
         return ResponseHandler.generateResponse("OK", HttpStatus.OK, itemService.addItem(itemDto));
     }
 
-    @PutMapping("/item/update")
+    @PutMapping("/update")
     public ResponseEntity<ServiceResponse> updateItem(@Valid @RequestBody ItemDto itemDto) {
         return ResponseHandler.generateResponse("OK", HttpStatus.OK, itemService.updateItem(itemDto));
     }
 
-    @PutMapping("/item/disable")
+    @PutMapping("/disable")
     public ResponseEntity<ServiceResponse> disableUser(@Valid @RequestParam Long itemId) {
         itemService.disableItem(itemId);
         return ResponseHandler.generateResponse("OK", HttpStatus.OK);

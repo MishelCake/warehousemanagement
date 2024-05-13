@@ -57,7 +57,7 @@ public class OrderController {
         return ResponseHandler.generateResponse("OK", HttpStatus.OK);
     }
 
-    @GetMapping( "/user/orders")
+    @GetMapping( "/list/orders")
     public ResponseEntity<ServiceResponse> getUserOrders(
             @RequestParam(defaultValue = "0") Integer pageNo,
             @RequestParam(defaultValue = "5") Integer pageSize,

@@ -17,34 +17,34 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/truck/")
 @RequiredArgsConstructor
+@RequestMapping("/truck")
 public class TruckController {
     private final TruckService truckService;
 
-    @GetMapping("/trucks")
+    @GetMapping("/all")
     public ResponseEntity<ServiceResponse> getAllActiveTrucks() {
         return ResponseHandler.generateResponse("OK", HttpStatus.OK, truckService.getAllActiveTrucks());
     }
 
-    @GetMapping("/truck")
+    @GetMapping("/id")
     public ResponseEntity<ServiceResponse> getTruckById(@Valid @RequestParam Long truckId) {
         return ResponseHandler.generateResponse("OK", HttpStatus.OK, truckService.getTruckById(truckId));
     }
 
-    @PostMapping("/truck/add")
+    @PostMapping("/add")
     public ResponseEntity<ServiceResponse> addNewTruck(@Valid @RequestBody TruckDto truckDto) {
         return ResponseHandler.generateResponse("OK", HttpStatus.OK, truckService.addTruck(truckDto));
     }
 
-    @PutMapping("/truck/update/license-plate")
+    @PutMapping("/update/license-plate")
     public ResponseEntity<ServiceResponse> updateTruckLicensePlate(@Valid @RequestParam String chassisNumber,
                                                                    @RequestParam String newLicensePlate) {
         return ResponseHandler.generateResponse("OK", HttpStatus.OK, truckService.updateLicensePlate(chassisNumber, newLicensePlate));
     }
 
-    @PutMapping("/truck/disable")
-    public ResponseEntity<ServiceResponse> disableUser(@Valid @RequestParam String chassisNumber) {
+    @PutMapping("/disable")
+    public ResponseEntity<ServiceResponse> disableTruck(@Valid @RequestParam String chassisNumber) {
         truckService.disableTruck(chassisNumber);
         return ResponseHandler.generateResponse("OK", HttpStatus.OK);
     }

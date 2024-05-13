@@ -235,6 +235,11 @@ public class OrderServiceImpl implements OrderService {
             throw new WarehouseException(Constants.THIS_ORDER_IS + order.getOrderStatus());
         }
 
+        order.getOrderItems().forEach(orderItem -> {
+            Item item = orderItem.getItem();
+            item.setQuantity(item.getQuantity() + orderItem.getOrderQuantity());
+            itemRepository.save(item);
+        });
         order.setOrderStatus(OrderStatus.CANCELED);
         orderRepository.save(order);
     }
