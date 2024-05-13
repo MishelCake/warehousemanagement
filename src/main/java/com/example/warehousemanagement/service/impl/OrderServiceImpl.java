@@ -49,9 +49,12 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderResponseDto createOrder(OrderDto orderDto) {
         User user = userRepository.findById(orderDto.getUserId()).orElse(null);
+
         if (user == null) {
             throw new WarehouseException(Constants.USER_NOT_FOUND);
         }
+        checkAccess(user.getEmail());
+
         String orderNumber = "ORD-" + UUID.randomUUID();
 
         Order order = new Order();
